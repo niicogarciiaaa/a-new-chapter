@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070a12">
+<meta name="description" content="Una pequeña carta para Adriana.">
+<title>Para Adriana — Una nueva etapa</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root{--bg:#070a12;--bg2:#0b0f1b;--text:#f4f0e8;--muted:#aaa8a2;--gold:#d9b979;--rose:#cfa8a6;--line:rgba(217,185,121,.25);--max:820px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;font-weight:300;line-height:1.8;overflow-x:hidden}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 10%,rgba(72,87,125,.12),transparent 34%),radial-gradient(circle at 20% 70%,rgba(207,168,166,.05),transparent 30%);z-index:-2}
+canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1}
+.screen{min-height:100svh;display:grid;place-items:center;padding:32px;position:relative}
+.hero{text-align:center;max-width:720px}
+.eyebrow{font-size:.72rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;opacity:.9}
+h1,h2,.signature,.date{font-family:"Cormorant Garamond",serif;font-weight:500}
+h1{font-size:clamp(3.5rem,12vw,7.5rem);line-height:.9;margin:0 0 28px;letter-spacing:-.035em}
+h2{font-size:clamp(2.3rem,7vw,4.3rem);line-height:1.05;margin:0 0 25px}
+.hero p{color:var(--muted);font-size:clamp(.95rem,2.5vw,1.1rem);max-width:500px;margin:0 auto 34px}
+.open-btn{border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--text);padding:14px 24px;border-radius:999px;font:400 .8rem "DM Sans",sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:.5s ease}
+.open-btn:hover,.open-btn:focus-visible{border-color:rgba(217,185,121,.65);background:rgba(217,185,121,.08);transform:translateY(-2px);box-shadow:0 0 35px rgba(217,185,121,.08)}
+.scroll-hint{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:#676b75}
+main{opacity:0;transition:opacity 1.2s ease}
+body.open main{opacity:1}
+.section{width:min(var(--max),calc(100% - 40px));margin:auto;padding:clamp(100px,16vw,190px) 0}
+.date-block{text-align:center}
+.date{font-size:clamp(2.7rem,9vw,5.3rem);letter-spacing:.08em;color:var(--text)}
+.date-caption{color:var(--muted);margin-top:5px}
+.timeline{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:60px auto 0;position:relative;max-width:620px}
+.dot{width:8px;height:8px;border:1px solid var(--gold);background:var(--bg);border-radius:50%;position:absolute;top:50%;transform:translate(-50%,-50%)}
+.dot.start{left:0}.dot.end{right:0;transform:translate(50%,-50%)}
+.timeline-labels{display:flex;justify-content:space-between;color:#737681;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;margin-top:18px}
+.letter-wrap{max-width:760px;margin:auto}
+.letter-kicker{text-align:center;color:var(--gold);font-size:.68rem;letter-spacing:.32em;text-transform:uppercase;margin-bottom:55px}
+.letter{font-family:"Cormorant Garamond",serif;font-size:clamp(1.25rem,2.8vw,1.55rem);line-height:1.72}
+.letter p{margin:0 0 1.35em;opacity:0;transform:translateY(22px);transition:opacity 1s ease,transform 1s ease}
+.letter p.visible{opacity:1;transform:none}
+.letter .greeting{font-size:1.45em;margin-bottom:1.2em}
+.highlight{color:#eee5d3;background:linear-gradient(transparent 76%,rgba(217,185,121,.16) 0);text-decoration:none}
+.final-line{position:relative;text-align:center;margin-top:20px;padding-top:15px}
+.final-line span{display:inline-block}
+.final-line.visible{animation:finalGlow 2.4s ease both}
+@keyframes finalGlow{0%{opacity:0;transform:translateY(18px);text-shadow:0 0 0 transparent}45%{opacity:1;transform:none;text-shadow:0 0 24px rgba(217,185,121,.2)}100%{text-shadow:0 0 8px rgba(217,185,121,.08)}}
+.closing{text-align:center}
+.closing .small{color:var(--muted);max-width:530px;margin:0 auto}
+.infinity{margin-top:60px;color:#77736e;font-family:"Cormorant Garamond",serif;font-size:1rem;letter-spacing:.18em}
+.music-btn{position:fixed;right:18px;bottom:18px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(7,10,18,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:var(--gold);font-size:1rem;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .8s ease,border-color .4s ease;z-index:10}
+body.open .music-btn{opacity:1;pointer-events:auto}
+.music-btn:hover,.music-btn:focus-visible{border-color:rgba(217,185,121,.65)}
+.music-btn.muted{color:#676b75}
+footer{padding:30px;text-align:center;color:#454851;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase}
+@media(max-width:600px){
+ .screen{padding:24px}.section{width:min(var(--max),calc(100% - 34px));padding:90px 0}
+ .hero p{max-width:320px}.letter{font-size:1.23rem;line-height:1.7}.letter-kicker{margin-bottom:42px}
+ .timeline{margin-top:45px}.scroll-hint{bottom:20px}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<section class="screen" id="cover">
+  <div class="hero">
+    <div class="eyebrow">Una pequeña sorpresa</div>
+    <h1>Para Adriana <span aria-hidden="true">♥</span></h1>
+    <p>Hoy comienza una nueva etapa.</p>
+    <p>Pero antes de que sigas leyendo...<br>quiero regalarte unas palabras.</p>
+    <button class="open-btn" id="openBtn">Abrir mi carta</button>
+  </div>
+  <div class="scroll-hint">17.07.2026</div>
+</section>
+
+<main id="content">
+  <section class="section date-block">
+    <div class="eyebrow">Una fecha</div>
+    <div class="date">17.07.2026</div>
+    <div class="date-caption">El día que empezó todo.</div>
+    <div class="timeline" aria-hidden="true"><i class="dot start"></i><i class="dot end"></i></div>
+    <div class="timeline-labels"><span>17.07.2026</span><span>Hoy</span></div>
+  </section>
+
+  <section class="section letter-wrap">
+    <div class="letter-kicker">Para leer despacio</div>
+    <article class="letter" aria-label="Carta para Adriana">
+      <p class="greeting">Adriana,</p>
+      <p>Bueno, hoy comienza una etapa nueva en tu vida. Bueno, realmente ya ha empezado, hoy simplemente es la celebración. Quiero que sepas que en mí siempre vas a tener a una persona en la que apoyarte. Realmente desearía poder estar hoy ahí con vosotros, pero por desgracia no es posible. Sé que hace relativamente poco que llegué a tu vida, más concretamente, empezamos a hablar un 17 de julio de 2026, pero en este poco tiempo <span class="highlight">te has convertido en una persona realmente importante para mí.</span></p>
+      <p>Quería decirte que desde el momento uno me demostraste muchísimo. Siempre intentabas ayudarme con todo, siempre intentabas darme tus mejores consejos y, sobre todo, siempre dabas lo mejor de ti para intentar que yo estuviera feliz. Y la verdad es que siempre lo estoy cuando estoy a tu lado. Aunque tengamos nuestras discusiones, que es algo completamente normal, al final <span class="highlight">siempre me tendrás aquí</span> para absolutamente todo lo que necesites.</p>
+      <p>También quería darte las gracias por quedarte en mi vida, aunque muchas veces yo mismo lo ponga realmente complicado. Te estaré agradecido absolutamente siempre por ello. Siempre te daré las gracias por esas noches de risas, por esos días hasta las tantas de la madrugada hablando de cualquier tontería y por cada momento que hemos compartido desde que apareciste en mi vida.</p>
+      <p>Y hoy, aunque no pueda estar ahí para verlo, quiero que disfrutes muchísimo de tu día, porque te lo mereces. Estoy muy orgulloso de ti y de la persona que eres, y me hace muchísima ilusión poder acompañarte, aunque sea desde la distancia, en un momento tan importante para ti.</p>
+      <p>Espero poder seguir estando a tu lado en todas las etapas que vengan después de esta, apoyándote, escuchándote y compartiendo contigo muchísimos momentos más.</p>
+      <p class="final-line"><span>Te quiero muchísimo, Adriana. ❤️</span></p>
+    </article>
+  </section>
+
+  <section class="section closing">
+    <div class="eyebrow">Después de hoy</div>
+    <h2>Y esto solo es el principio.</h2>
+    <p class="small">Espero poder estar presente en muchas de las etapas que todavía nos quedan por vivir.</p>
+  </section>
+
+  <section class="screen" style="min-height:80svh">
+    <div class="hero">
+      <h2>Feliz puesta de largo, Adriana ❤️</h2>
+      <p>Disfruta de tu día.<br>Te lo mereces.</p>
+      <div class="infinity">17.07.2026 → ∞</div>
+    </div>
+  </section>
+</main>
+<audio id="song" src="cancion.mp3" loop preload="auto"></audio>
+<button class="music-btn" id="musicBtn" aria-label="Silenciar música" aria-pressed="false">♪</button>
+<footer>Hecha para una noche especial.</footer>
+
+<script>
+const btn=document.getElementById('openBtn');
+const cover=document.getElementById('cover');
+const song=document.getElementById('song');
+const musicBtn=document.getElementById('musicBtn');
+const VOL=.6;
+function fadeIn(){
+ song.volume=0;
+ const start=performance.now();
+ (function step(now){
+  const k=Math.min(1,(now-start)/3000);
+  song.volume=VOL*k;
+  if(k<1)requestAnimationFrame(step);
+ })(start);
+}
+function setMuted(m){
+ song.muted=m;
+ musicBtn.classList.toggle('muted',m);
+ musicBtn.setAttribute('aria-pressed',String(m));
+ musicBtn.setAttribute('aria-label',m?'Activar música':'Silenciar música');
+}
+musicBtn.addEventListener('click',()=>{
+ if(song.paused){setMuted(false);song.play().catch(()=>{});return;}
+ setMuted(!song.muted);
+});
+btn.addEventListener('click',()=>{
+ if(song.paused){song.play().then(fadeIn).catch(()=>setMuted(true));}
+ document.body.classList.add('open');
+ setTimeout(()=>document.getElementById('content').scrollIntoView({behavior:'smooth'}),180);
+});
+
+const paragraphs=[...document.querySelectorAll('.letter p')];
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const observer=new IntersectionObserver(entries=>{
+ entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:.16,rootMargin:'0px 0px -8% 0px'});
+paragraphs.forEach(p=>observer.observe(p));
+
+const canvas=document.getElementById('stars'),ctx=canvas.getContext('2d');
+let stars=[];
+let lastW=0;
+function resize(){
+ canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio;
+ ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ if(innerWidth===lastW&&stars.length)return;
+ lastW=innerWidth;
+ stars=Array.from({length:Math.min(85,Math.floor(innerWidth/10))},()=>({
+  x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*.75+.2,a:Math.random()*.5+.1,s:Math.random()*.0015+.0005,p:Math.random()*Math.PI*2
+ }));
+}
+function draw(t){
+ ctx.clearRect(0,0,innerWidth,innerHeight);
+ for(const s of stars){
+  const alpha=s.a+Math.sin(t*s.s+s.p)*.08;
+  ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+  ctx.fillStyle=`rgba(225,215,190,${Math.max(.03,alpha)})`;ctx.fill();
+ }
+ if(!reduced)requestAnimationFrame(draw);
+}
+addEventListener('resize',()=>{resize();if(reduced)draw(0);});resize();draw(0);
+</script>
+</body>
+</html>
