@@ -138,44 +138,92 @@ footer{padding:30px;text-align:center;color:#454851;font-size:.65rem;letter-spac
   </section>
 </main>
 <audio id="song" src="cancion.mp3" loop preload="auto"></audio>
+<audio id="piano" src="piano.mp3" loop preload="metadata"></audio>
 <button class="music-btn" id="musicBtn" aria-label="Silenciar música" aria-pressed="false">♪</button>
 <footer>Hecha para una noche especial.</footer>
 
 <script>
 const btn=document.getElementById('openBtn');
 const cover=document.getElementById('cover');
-const song=document.getElementById('song');
 const musicBtn=document.getElementById('musicBtn');
-const VOL=.6,VOL_LETTER=.32;
-let ramp=0,target=VOL;
-function rampTo(v,ms){
- target=v;
- const from=song.volume,start=performance.now(),id=++ramp;
+// Dos pistas: la canción para portada y final, el piano mientras se lee la carta.
+const tracks={
+ song:{el:document.getElementById('song'),vol:.6},
+ piano:{el:document.getElementById('piano'),vol:.75}
+};
+let actx=null,master=null,active='song',muted=false,started=false;
+// Web Audio permite fundidos también en iPhone (Safari ignora audio.volume).
+// Abriendo el archivo con doble clic (file://) Chrome lo silenciaría, así que ahí se usa audio.volume.
+function setupAudio(){
+ if(location.protocol==='file:')return;
+ const AC=window.AudioContext||window.webkitAudioContext;
+ if(!AC)return;
+ try{
+  if(navigator.audioSession)navigator.audioSession.type='playback';
+  actx=new AC();master=actx.createGain();master.connect(actx.destination);
+  for(const t of Object.values(tracks)){
+   t.gain=actx.createGain();t.gain.gain.value=0;
+   actx.createMediaElementSource(t.el).connect(t.gain);t.gain.connect(master);
+  }
+ }catch(e){actx=null;}
+}
+function level(t,v,ms){
+ t.target=v;
+ if(actx){
+  const g=t.gain.gain,now=actx.currentTime;
+  g.cancelScheduledValues(now);g.setValueAtTime(g.value,now);g.linearRampToValueAtTime(v,now+ms/1000);
+  return;
+ }
+ const from=t.el.volume,start=performance.now(),id=t.ramp=(t.ramp||0)+1;
  (function step(now){
-  if(id!==ramp)return;
+  if(id!==t.ramp)return;
   const k=Math.min(1,(now-start)/ms);
-  song.volume=from+(v-from)*k;
+  t.el.volume=from+(v-from)*k;
   if(k<1)requestAnimationFrame(step);
  })(start);
 }
-function fadeIn(){song.volume=0;rampTo(target,3000);}
+function crossfadeTo(name,ms){
+ active=name;
+ for(const[key,t]of Object.entries(tracks)){
+  if(key===name){
+   if(t.el.paused)t.el.play().catch(()=>{});
+   level(t,t.vol,ms);
+  }else if(!t.el.paused){
+   level(t,0,ms);
+   setTimeout(()=>{if(active!==key)t.el.pause();},ms+100);
+  }
+ }
+}
 new IntersectionObserver(([e])=>{
- const v=e.isIntersecting?VOL_LETTER:VOL;
- if(v!==target&&!song.paused)rampTo(v,2000);else target=v;
-},{rootMargin:'-35% 0px -35% 0px'}).observe(document.querySelector('.letter'));
+ if(!started)return;
+ const want=e.isIntersecting?'piano':'song';
+ if(want!==active)crossfadeTo(want,2800);
+},{rootMargin:'-30% 0px -30% 0px'}).observe(document.querySelector('.letter-wrap'));
 function setMuted(m){
- song.muted=m;
+ muted=m;
+ if(actx)master.gain.setTargetAtTime(m?0:1,actx.currentTime,.08);
+ else for(const t of Object.values(tracks))t.el.muted=m;
  musicBtn.classList.toggle('muted',m);
  musicBtn.setAttribute('aria-pressed',String(m));
  musicBtn.setAttribute('aria-label',m?'Activar música':'Silenciar música');
 }
 musicBtn.addEventListener('click',()=>{
- if(song.paused){setMuted(false);song.play().catch(()=>{});return;}
- setMuted(!song.muted);
+ const cur=tracks[active].el;
+ if(cur.paused){setMuted(false);cur.play().catch(()=>{});return;}
+ setMuted(!muted);
 });
 btn.addEventListener('click',()=>{
  document.documentElement.classList.remove('locked');
- if(song.paused){song.play().then(fadeIn).catch(()=>setMuted(true));}
+ if(!started){
+  started=true;
+  setupAudio();
+  if(actx&&actx.state==='suspended')actx.resume();
+  for(const t of Object.values(tracks))t.el.volume=actx?1:0;
+  // En iPhone cada audio necesita arrancar con un toque: el piano se "desbloquea" aquí, en silencio.
+  const p=tracks.piano.el;
+  p.play().then(()=>{if(active!=='piano')p.pause();}).catch(()=>{});
+  tracks.song.el.play().then(()=>crossfadeTo(active,3000)).catch(()=>setMuted(true));
+ }
  document.body.classList.add('open');
  setTimeout(()=>document.getElementById('content').scrollIntoView({behavior:'smooth'}),180);
 });
